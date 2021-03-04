@@ -40,13 +40,13 @@ func (app *App)ReadPaymentsFile(ctx context.Context, inputfile string) ([] Payme
 	r := csv.NewReader(csvfile)
 	var i = 0
 	for {
-			record, err := r.Read()
-			if err == io.EOF {
-					break
-			}
-			if err != nil {
-					log.Fatal(err)
-			}
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
 		fmt.Printf("Addressn:%s Amount:%s\n", record[0], record[1])
 		if (!common.IsHexAddress(record[0])) {
 			fmt.Printf("Addressn:%s not recognized!\n", record[0]);

@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/oauth2/google"
+	"google.golang.org/api/idtoken"
 )
 
 type Config struct {
@@ -24,7 +24,7 @@ type Config struct {
 	KeyFile         string `default:"keyfile.json"`
 	KeyPasswordFile string `default:"pwfile.json"`
 	CredentialsFile string `default:"credentials.json"`
-	ClientID        string `default:"47928468404-chckab1fperdmo0bno5on8kvth6kha4m.apps.googleusercontent.com"`
+	ClientID        string `default:"47928468404-hfuqhrb6lhtv9sem30rkjc1djcrlpt4v.apps.googleusercontent.com"`
 	LogLevel        string `default:"debug"`
 	JobTimeout           time.Duration  `default:"60m"`
 	InputFileName string `default:"test.csv"`
@@ -64,9 +64,14 @@ type result struct {
 	err       error
 }
 
-func Dial(ctx context.Context, url string, tokenSrc oauth2.TokenSource) (*ethclient.Client, error) {
+func (app *App)Dial(ctx context.Context, url string, clientOption idtoken.ClientOption) (*ethclient.Client, error) {
 
-	r, err := erpc.DialHTTPWithClient(url, oauth2.NewClient(ctx, tokenSrc))
+	ts, err := idtoken.NewClient(ctx, app.Config().ClientID, clientOption)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := erpc.DialHTTPWithClient(url, ts)
 	if err != nil {
 		return nil, err
 	}
@@ -118,6 +123,7 @@ func NewApp(conf Config) (*App, error) {
 	app.log = logrus.NewEntry(logger)
 
 	// Retrieving Access Token using Service Account by Google's OAuth2 package for Golang
+	/*
 	credsBytes, err := ioutil.ReadFile(conf.CredentialsFile)
 	if err != nil {
 		return nil, err
@@ -126,12 +132,15 @@ func NewApp(conf Config) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	*/
+	clientOption := idtoken.WithCredentialsFile(conf.CredentialsFile)
+	app.Log().WithFields(logrus.Fields{"client_id": conf.ClientID}).Debug("JWTAccessTokenSourceFromJSON processed successfully")
 	c := context.Background()
-	wc, err := Dial(c, conf.WorkerChainURL, app.tokenSrc)
+	wc, err := app.Dial(c, conf.WorkerChainURL, clientOption)
 	if err != nil {
 		return nil, err
 	}
-
+	app.Log().WithFields(logrus.Fields{"WorkerChainURL": conf.WorkerChainURL}).Debug("Dial processed successfully")
 	app.client = wc
 
 	pw, err := readPassword(conf.KeyPasswordFile)
