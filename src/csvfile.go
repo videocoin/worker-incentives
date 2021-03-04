@@ -70,7 +70,7 @@ func (app *App)WritePaymentsReceipt(ctx context.Context, outputfile string, paym
 	outfile, err := os.Create(outputfile)
 	
 	for _, payment := range payments {
-		_, err = fmt.Fprintf(outfile, "%v,%v,%v\n", payment.Address, payment.Amount, payment.Transaction)
+		_, err = fmt.Fprintf(outfile, "%s,%v,%s\n", payment.Address.Hex(), payment.Amount, payment.Transaction.Hex())
 		if err != nil {
 			log.Fatal(err)
 			//return err
