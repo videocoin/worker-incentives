@@ -17,7 +17,7 @@ func job() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), conf.JobTimeout)
 	defer cancel()
-	if err := app.Execute(ctx, conf.InputTypeCsv, &incentives.Request{conf.SpreadsheetID}); err != nil {
+	if err := app.Execute(ctx, conf.InputFileName, conf.OutputFileName); err != nil {
 		app.Log().Fatalf("failed to execute request %v\n", err)
 	}
 	app.Log().Infof("job request finished succesfully")

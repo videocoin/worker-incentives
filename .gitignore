@@ -1,0 +1,6 @@
+vendor/
+build/
+credentials.json
+token.json
+pw*.json
+key*.json

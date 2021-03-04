@@ -5,9 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/videocoin/vidpool/price"
 )
 
 var (
@@ -16,7 +13,7 @@ var (
 )
 
 // AsyncExecute unlike Execute will run the job in the background and save result to the results map.
-func (app *App) AsyncExecute(ctx context.Context, inputType bool, req *Request) (int, error) {
+func (app *App) AsyncExecute(ctx context.Context, inputType bool, inputfile string, outputfile string) (int, error) {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 	if app.state == statePending {
@@ -28,7 +25,7 @@ func (app *App) AsyncExecute(ctx context.Context, inputType bool, req *Request) 
 		// it is intentionally doesn't inherit method ctx, as it will be tied to http
 		// request
 		ctx, _ = context.WithTimeout(context.Background(), app.conf.JobTimeout)
-		err := app.Execute(ctx, inputType, req)
+		err := app.Execute(ctx, inputfile, outputfile)
 		app.mu.Lock()
 		defer app.mu.Unlock()
 		app.state = stateIdle
@@ -41,28 +38,6 @@ func (app *App) AsyncExecute(ctx context.Context, inputType bool, req *Request) 
 	return app.id, nil
 }
 
-func (app *App) RunHistoryCleaner(ctx context.Context) {
-	ticker := time.NewTicker(app.conf.HistoryRetention)
-	go func() {
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				now := time.Now()
-				app.mu.Lock()
-				for id, res := range app.results {
-					if now.Sub(res.timestamp) >= app.conf.HistoryRetention {
-						app.log.Debugf("result for request with id %d (timestamp %v) was removed from memory", id, res.timestamp)
-						delete(app.results, id)
-					}
-				}
-				app.mu.Unlock()
-			}
-		}
-	}()
-}
 
 func (app *App) GetState(id int) error {
 	app.mu.Lock()
@@ -80,38 +55,18 @@ func (app *App) GetState(id int) error {
 	return result.err
 }
 
-func (app *App) Execute(ctx context.Context, inputTypeCsv bool, req *Request) error {
+func (app *App) Execute(ctx context.Context, inputfile string, outputfile string) error {
 	var payments []Payment
 	var err error
-	if inputTypeCsv {
-		payments, err = app.ReadPaymentsFile(ctx, req)		
-	} else {
-		payments, err = app.RetrievePayments(ctx, req)
-	}
+	payments, err = app.ReadPaymentsFile(ctx, inputfile)		
+
 	if err != nil {
 		return err
 	}
 
-	client, err := ethclient.Dial(app.conf.EthereumURL)
-	if err != nil {
-		return fmt.Errorf("failed to dial %v: %w", app.conf.EthereumURL, err)
-	}
-
-	gasPrice, err := price.Estimator{Log: app.log, Client: client}.Estimate(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to estimate gas price: %w", err)
-	}
-	app.log.Infof("gas price for next transactions %v", gasPrice)
-	payments, err = app.Transact(ctx, payments, &TransactOpts{
-		DryRun: app.conf.DryRun,
-		Price:  gasPrice,
-	})
+	payments, err = app.Transact(ctx, payments)
 	if err != nil {
 		return err
 	}
-	if inputTypeCsv {	
-		return app.WritePaymentsReceipt(ctx, req, payments)		
-	} else {
-		return app.UpdateSpreadsheet(ctx, req, payments)
-	}
+	return app.WritePaymentsReceipt(ctx, outputfile, payments)		
 }

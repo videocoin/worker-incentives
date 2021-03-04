@@ -13,8 +13,24 @@ import (
 	"strconv"
 )
 
-func (app *App)ReadPaymentsFile(ctx context.Context, req *Request) ([] Payment, error) {
-	inputfile := req.SpreadsheetID
+const (
+	Wei   = 1
+	GWei  = 1e9
+	Ether = 1e18
+)
+
+func etherToWei(val *big.Int) *big.Int {
+	return new(big.Int).Mul(val, big.NewInt(Ether))
+}
+
+type Payment struct {
+	ID          int            `json:"id"`
+	Address     common.Address `json:"address"`
+	Amount      *big.Int       `json:"amount"`
+	Transaction common.Hash    `json:"tx"`
+}
+
+func (app *App)ReadPaymentsFile(ctx context.Context, inputfile string) ([] Payment, error) {
 	payments := []Payment{}
 	csvfile, err := os.Open(inputfile)
 	if err != nil {
@@ -41,7 +57,8 @@ func (app *App)ReadPaymentsFile(ctx context.Context, req *Request) ([] Payment, 
 			fmt.Println("Failed converson;", s) 
 		}
 		//Amount, _ := new(big.Int).SetString(record[1], 10)
-		Amount := new(big.Int).SetInt64(int64(math.Trunc(s)))
+		EthAmount := new(big.Int).SetInt64(int64(math.Trunc(s)))
+		Amount := etherToWei(EthAmount)
 		Address := common.HexToAddress(record[0])
 		payment := Payment{ID: i, Address: Address, Amount: Amount }
 		payments = append(payments, payment)
@@ -49,7 +66,7 @@ func (app *App)ReadPaymentsFile(ctx context.Context, req *Request) ([] Payment, 
 	return payments, nil
 }
 
-func (app *App)WritePaymentsReceipt(ctx context.Context, req *Request, payments [] Payment) error {
+func (app *App)WritePaymentsReceipt(ctx context.Context, outputfile string, payments [] Payment) error {
 	return nil
 }
 
