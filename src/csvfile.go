@@ -67,6 +67,15 @@ func (app *App)ReadPaymentsFile(ctx context.Context, inputfile string) ([] Payme
 }
 
 func (app *App)WritePaymentsReceipt(ctx context.Context, outputfile string, payments [] Payment) error {
+	outfile, err := os.Create(outputfile)
+	
+	for _, payment := range payments {
+		_, err = fmt.Fprintf(outfile, "%v,%v,%v\n", payment.Address, payment.Amount, payment.Transaction)
+		if err != nil {
+			log.Fatal(err)
+			//return err
+		}
+	}
 	return nil
 }
 

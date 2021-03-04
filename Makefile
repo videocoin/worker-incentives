@@ -1,9 +1,9 @@
-JOB_IMAGE = registry.videocoin.net/vworker-incentives/server
+JOB_IMAGE = registry.videocoin.net/worker-incentives/worker-incentives
 VERSION ?= $(shell git describe --tags)
 
 .PHONY: build
 build:
-	go build -o ./build/server ./cmd
+	go build -o ./build/worker-incetives ./cmd
 
 .PHONY: deps
 deps:
