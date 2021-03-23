@@ -1,20 +1,26 @@
-package incentives
+package app
 
 import (
 	"context"
-	//"fmt"
-	"math/big"
 	"crypto/ecdsa"
+	"math/big"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/core/types"	
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"	
-	//"github.com/videocoin/vidpool/flat"
 )
 
-func Transfer(client *ethclient.Client, opts *bind.TransactOpts, senderPrivKey *ecdsa.PrivateKey, receiver common.Address, amount *big.Int) (error, common.Hash) {
+func Transfer(
+	ctx context.Context,
+	client *ethclient.Client,
+	opts *bind.TransactOpts,
+	senderPrivKey *ecdsa.PrivateKey,
+	receiver common.Address,
+	amount *big.Int) (error, common.Hash) {
+
 	var txHash common.Hash
-	nonce, err := client.PendingNonceAt(context.Background(), opts.From)
+	nonce, err := client.PendingNonceAt(ctx, opts.From)
 	if err != nil {
 		return err, txHash
 	}
@@ -33,15 +39,15 @@ func Transfer(client *ethclient.Client, opts *bind.TransactOpts, senderPrivKey *
 	if err != nil {
 		return err, txHash
 	}
-	return nil, txHash
+	return nil, signedTx.Hash()
 }
 
-func (app *App) Transact(ctx context.Context, payments []Payment) ([]Payment, error) {
+func (e *Engine) Transact(ctx context.Context, execOpts *ExecuteOpts, payments []Payment) ([]Payment, error) {
 	for i := range payments {
-		err, txHash := Transfer(app.client, app.opts, app.senderPrivKey, payments[i].Address, payments[i].Amount)
+		err, txHash := Transfer(ctx, execOpts.client, execOpts.opts, execOpts.senderPrivKey, payments[i].Address, payments[i].Amount)
 		if err != nil {
 			return payments, err
-		}		
+		}
 		payments[i].Transaction = txHash
 		i++
 	}

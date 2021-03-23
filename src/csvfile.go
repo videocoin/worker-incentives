@@ -1,16 +1,17 @@
-package incentives
+package app
 
 import (
-	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"math/big"
-	"math"	
-	"github.com/ethereum/go-ethereum/common"
+	"os"
 	"strconv"
+	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 const (
@@ -30,11 +31,21 @@ type Payment struct {
 	Transaction common.Hash    `json:"tx"`
 }
 
-func (app *App)ReadPaymentsFile(ctx context.Context, inputfile string) ([] Payment, error) {
+func etherFloatToWei(eth *big.Float) *big.Int {
+	truncInt, _ := eth.Int(nil)
+	truncInt = new(big.Int).Mul(truncInt, big.NewInt(params.Ether))
+	fracStr := strings.Split(fmt.Sprintf("%.18f", eth), ".")[1]
+	fracStr += strings.Repeat("0", 18-len(fracStr))
+	fracInt, _ := new(big.Int).SetString(fracStr, 10)
+	wei := new(big.Int).Add(truncInt, fracInt)
+	return wei
+}
+
+func ReadPaymentsFile(inputfile string) ([]Payment, error) {
 	payments := []Payment{}
 	csvfile, err := os.Open(inputfile)
 	if err != nil {
-			log.Fatalln("Couldn't open the csv file", err)
+		log.Fatalln("Couldn't open the csv file", err)
 	}
 
 	r := csv.NewReader(csvfile)
@@ -47,28 +58,37 @@ func (app *App)ReadPaymentsFile(ctx context.Context, inputfile string) ([] Payme
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Addressn:%s Amount:%s\n", record[0], record[1])
-		if (!common.IsHexAddress(record[0])) {
-			fmt.Printf("Addressn:%s not recognized!\n", record[0]);
+		if record[0] == "worker_address" {
 			continue
 		}
-		s, err := strconv.ParseFloat(record[1], 32) 
-		if err != nil{
-			fmt.Println("Failed converson;", s) 
+		fmt.Printf("Addressn:%s Amount:%s\n", record[0], record[1])
+		if !common.IsHexAddress(record[0]) {
+			fmt.Printf("Addressn:%s not recognized!\n", record[0])
+			continue
+		}
+		s, err := strconv.ParseFloat(record[1], 32)
+		if err != nil {
+			fmt.Printf("Failed converson-1 %v", s)
 		}
 		//Amount, _ := new(big.Int).SetString(record[1], 10)
-		EthAmount := new(big.Int).SetInt64(int64(math.Trunc(s)))
-		Amount := etherToWei(EthAmount)
-		Address := common.HexToAddress(record[0])
-		payment := Payment{ID: i, Address: Address, Amount: Amount }
-		payments = append(payments, payment)
+		floatAmount, ok := new(big.Float).SetString(record[1])
+		if ok {
+			Amount := etherFloatToWei(floatAmount)
+			//EthAmount := new(big.Int).SetInt64(int64(math.Trunc(s)))
+			//Amount := etherToWei(EthAmount)
+			Address := common.HexToAddress(record[0])
+			payment := Payment{ID: i, Address: Address, Amount: Amount}
+			payments = append(payments, payment)
+		} else {
+			fmt.Printf("Failed converson-2 %v", s)
+		}
 	}
 	return payments, nil
 }
 
-func (app *App)WritePaymentsReceipt(ctx context.Context, outputfile string, payments [] Payment) error {
+func WritePaymentsReceipt(outputfile string, payments []Payment) error {
 	outfile, err := os.Create(outputfile)
-	
+
 	for _, payment := range payments {
 		_, err = fmt.Fprintf(outfile, "%s,%v,%s\n", payment.Address.Hex(), payment.Amount, payment.Transaction.Hex())
 		if err != nil {
@@ -78,5 +98,3 @@ func (app *App)WritePaymentsReceipt(ctx context.Context, outputfile string, paym
 	}
 	return nil
 }
-
-

@@ -1,14 +1,15 @@
 package main
 
 import (
-	//"context"
-	//"errors"
-	//"fmt"
-	//"os/signal"
+	"fmt"
+	"os"
 
-	//incentives "github.com/videocoin/worker-incentives/src"
+	app "github.com/videocoin/worker-incentives/src"
 )
 
 func main() {
-		job()
+	if err := app.RootCommand().Execute(); err != nil {
+		fmt.Printf("worker-incentives execution failed with %v\n", err)
+		os.Exit(1)
+	}
 }

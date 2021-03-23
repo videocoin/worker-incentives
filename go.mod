@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.5.0
+	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
 	github.com/videocoin/oauth2 v0.0.0-20200420193217-d1533f241e14
 	github.com/videocoin/vidpool v0.2.10

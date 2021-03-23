@@ -1,0 +1,12 @@
+{
+    "DataDir": "/tmp/",
+    "KeyFile": "keyfile_dev.json",
+    "Password": "test123",
+    "ClientID": "47928468404-hfuqhrb6lhtv9sem30rkjc1djcrlpt4v.apps.googleusercontent.com",
+    "CredentialsFile": "credentials.json",
+    "WorkerChainURL": "https://symphony.dev.videocoin.net/",
+    "LogLevel": "trace",
+    "Rate": {
+        "Decimal": 0.14
+    }
+}
