@@ -27,13 +27,10 @@ type Config struct {
 	WorkerChainURL  string
 	KeyFile         string
 	Password        string
-	KeyPasswordFile string
 	CredentialsFile string
 	ClientID        string
 	LogLevel        string
 	JobTimeout      time.Duration `default:"60m"`
-	InputFileName   string
-	OutputFileName  string
 }
 
 func transactor(keyfile, password string) (*bind.TransactOpts, error) {
@@ -126,7 +123,6 @@ func (c *Context) Incentives() (eng Engine, err error) {
 
 func GetContext(path string) (Context, error) {
 	conf := Config{}
-	fmt.Printf("conf1: %v", conf)
 	if len(path) > 0 {
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -135,12 +131,10 @@ func GetContext(path string) (Context, error) {
 		if err := json.Unmarshal(data, &conf); err != nil {
 			return Context{}, err
 		}
-		fmt.Printf("conf2: %v", conf)
 	}
 	if err := envconfig.Process("INCENTIVES", &conf); err != nil {
 		return Context{}, fmt.Errorf("failed to parse envconfig: %w", err)
 	}
-	fmt.Printf("conf3: %v key:%v", conf, conf.KeyFile)
 	ctx, cancel := context.WithCancel(context.Background())
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGINT)
