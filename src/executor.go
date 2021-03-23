@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,11 +10,10 @@ import (
 )
 
 type ExecuteOpts struct {
-	senderPrivKey *ecdsa.PrivateKey
-	client        *ethclient.Client
-	opts          *bind.TransactOpts
-	inputfile     string
-	outputfile    string
+	client     *ethclient.Client
+	opts       *bind.TransactOpts
+	inputfile  string
+	outputfile string
 }
 
 type Engine struct {

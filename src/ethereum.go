@@ -2,7 +2,8 @@ package app
 
 import (
 	"context"
-	"crypto/ecdsa"
+	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,11 +12,14 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+var (
+	ErrTransactionReverted = errors.New("transaction reverted")
+)
+
 func Transfer(
 	ctx context.Context,
 	client *ethclient.Client,
 	opts *bind.TransactOpts,
-	senderPrivKey *ecdsa.PrivateKey,
 	receiver common.Address,
 	amount *big.Int) (error, common.Hash) {
 
@@ -30,8 +34,7 @@ func Transfer(
 	var data []byte
 	//chainID := big.NewInt(1337)
 	tx := types.NewTransaction(nonce, receiver, value, gasLimit, gasPrice, data)
-	s := types.HomesteadSigner{}
-	signedTx, err := types.SignTx(tx, s, senderPrivKey)
+	signedTx, err := opts.Signer(types.HomesteadSigner{}, opts.From, tx)
 	if err != nil {
 		return err, txHash
 	}
@@ -39,12 +42,20 @@ func Transfer(
 	if err != nil {
 		return err, txHash
 	}
+
+	receipt, err := bind.WaitMined(ctx, client, signedTx)
+	if err != nil {
+		return err, txHash
+	}
+	if receipt.Status == types.ReceiptStatusFailed {
+		return fmt.Errorf("%w: %s", ErrTransactionReverted, signedTx.Hash().String()), signedTx.Hash()
+	}
 	return nil, signedTx.Hash()
 }
 
 func (e *Engine) Transact(ctx context.Context, execOpts *ExecuteOpts, payments []Payment) ([]Payment, error) {
 	for i := range payments {
-		err, txHash := Transfer(ctx, execOpts.client, execOpts.opts, execOpts.senderPrivKey, payments[i].Address, payments[i].Amount)
+		err, txHash := Transfer(ctx, execOpts.client, execOpts.opts, payments[i].Address, payments[i].Amount)
 		if err != nil {
 			return payments, err
 		}

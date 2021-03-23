@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -66,21 +65,15 @@ func ReadPaymentsFile(inputfile string) ([]Payment, error) {
 			fmt.Printf("Addressn:%s not recognized!\n", record[0])
 			continue
 		}
-		s, err := strconv.ParseFloat(record[1], 32)
-		if err != nil {
-			fmt.Printf("Failed converson-1 %v", s)
-		}
-		//Amount, _ := new(big.Int).SetString(record[1], 10)
+
 		floatAmount, ok := new(big.Float).SetString(record[1])
 		if ok {
 			Amount := etherFloatToWei(floatAmount)
-			//EthAmount := new(big.Int).SetInt64(int64(math.Trunc(s)))
-			//Amount := etherToWei(EthAmount)
 			Address := common.HexToAddress(record[0])
 			payment := Payment{ID: i, Address: Address, Amount: Amount}
 			payments = append(payments, payment)
 		} else {
-			fmt.Printf("Failed converson-2 %v", s)
+			fmt.Printf("Failed converson-2 %v", record[1])
 		}
 	}
 	return payments, nil
@@ -93,7 +86,6 @@ func WritePaymentsReceipt(outputfile string, payments []Payment) error {
 		_, err = fmt.Fprintf(outfile, "%s,%v,%s\n", payment.Address.Hex(), payment.Amount, payment.Transaction.Hex())
 		if err != nil {
 			log.Fatal(err)
-			//return err
 		}
 	}
 	return nil

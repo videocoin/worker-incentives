@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -37,21 +36,21 @@ type Config struct {
 	OutputFileName  string
 }
 
-func transactor(keyfile, password string) (*bind.TransactOpts, *ecdsa.PrivateKey, error) {
+func transactor(keyfile, password string) (*bind.TransactOpts, error) {
 	f, err := os.Open(keyfile)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer f.Close()
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	key, err := keystore.DecryptKey(data, password)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return bind.NewKeyedTransactor(key.PrivateKey), key.PrivateKey, nil
+	return bind.NewKeyedTransactor(key.PrivateKey), nil
 }
 
 func readPassword(passwordFile string) (string, error) {
@@ -73,10 +72,10 @@ type Context struct {
 
 	Logger *logrus.Entry
 
-	Transactor    *bind.TransactOpts
-	senderPrivKey *ecdsa.PrivateKey
-	client        *ethclient.Client
-	opts          *bind.TransactOpts
+	Transactor *bind.TransactOpts
+
+	client *ethclient.Client
+	opts   *bind.TransactOpts
 }
 
 func (c Context) Dial(url string, clientOption idtoken.ClientOption) (*ethclient.Client, error) {
@@ -118,7 +117,7 @@ func (c *Context) Incentives() (eng Engine, err error) {
 	c.Logger.WithFields(logrus.Fields{"WorkerChainURL": c.Config.WorkerChainURL}).Debug("Dial processed successfully")
 	c.client = wc
 
-	c.opts, c.senderPrivKey, err = transactor(c.Config.KeyFile, c.Config.Password)
+	c.opts, err = transactor(c.Config.KeyFile, c.Config.Password)
 	if err != nil {
 		return eng, err
 	}
@@ -172,14 +171,13 @@ func ToContext(ctx context.Context, conf Config, path string) (Context, error) {
 	appctx.Logger = logrus.NewEntry(logger)
 
 	var txn *bind.TransactOpts
-	var senderPrivKey *ecdsa.PrivateKey
 	if len(conf.KeyFile) > 0 {
 		keypath := conf.KeyFile
 		if !filepath.IsAbs(keypath) {
 			keypath = filepath.Join(path, keypath)
 		}
 		password := conf.Password
-		txn, senderPrivKey, err = transactor(keypath, password)
+		txn, err = transactor(keypath, password)
 		if err != nil {
 			return appctx, err
 		}
@@ -188,7 +186,6 @@ func ToContext(ctx context.Context, conf Config, path string) (Context, error) {
 	}
 
 	appctx.Transactor = txn
-	appctx.senderPrivKey = senderPrivKey
 	return appctx, nil
 }
 
@@ -227,7 +224,6 @@ func PayCommand(config *string) *cobra.Command {
 
 			execOpts.client = ctx.client
 			execOpts.opts = ctx.opts
-			execOpts.senderPrivKey = ctx.senderPrivKey
 			err = engine.Execute(ctx, &execOpts)
 			if err != nil {
 				return err
