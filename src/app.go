@@ -16,11 +16,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/ethclient"
-	erpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/idtoken"
 )
 
 type Config struct {
@@ -75,22 +73,6 @@ type Context struct {
 	opts   *bind.TransactOpts
 }
 
-func (c Context) Dial(url string, clientOption idtoken.ClientOption) (*ethclient.Client, error) {
-
-	ts, err := idtoken.NewClient(c, c.Config.ClientID, clientOption)
-	if err != nil {
-		return nil, err
-	}
-
-	r, err := erpc.DialHTTPWithClient(url, ts)
-	if err != nil {
-		return nil, err
-	}
-
-	client := ethclient.NewClient(r)
-	return client, nil
-}
-
 func (c *Context) Incentives() (eng Engine, err error) {
 
 	logger := logrus.New()
@@ -104,10 +86,7 @@ func (c *Context) Incentives() (eng Engine, err error) {
 	))
 	c.Logger = logrus.NewEntry(logger)
 
-	clientOption := idtoken.WithCredentialsFile(c.Config.CredentialsFile)
-	c.Logger.WithFields(logrus.Fields{"client_id": c.Config.ClientID}).Debug("JWTAccessTokenSourceFromJSON processed successfully")
-
-	wc, err := c.Dial(c.Config.WorkerChainURL, clientOption)
+	wc, err := ethclient.Dial(c.Config.WorkerChainURL)
 	if err != nil {
 		return eng, err
 	}

@@ -60,6 +60,7 @@ func (e *Engine) Transact(ctx context.Context, execOpts *ExecuteOpts, payments [
 			return payments, err
 		}
 		payments[i].Transaction = txHash
+		fmt.Printf("%s,%v,%s\n", payments[i].Address.Hex(), payments[i].Amount, payments[i].Transaction.Hex())
 		i++
 	}
 	return payments, nil
