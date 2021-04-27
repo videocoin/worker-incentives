@@ -61,7 +61,7 @@ func main() {
 		<-workerJob.Start()
 		<-jobChan
 
-		incentivesJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/incentives", "pay", "--input", "/WorkerIncentives.csv", "--output", "WorkerIncentivesReceipt.csv", "-c", "/vault/secrets/prodrun.json")
+		incentivesJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/incentives", "pay", "--input", "WorkerIncentives.csv", "--output", "WorkerIncentivesReceipt.csv", "-c", "/vault/secrets/prodrun.json")
 		incentivesChan := make(chan struct{})
 		go func() {
 			defer close(incentivesChan)
@@ -195,18 +195,18 @@ func IncentivesEmailConfPayout() []byte {
 	email := mail.NewEmail(name, address)
 	m.Personalizations[0].AddTos(email)
 
-	logfile, _ := ioutil.ReadFile("opt/incentives/JobLogFile")
+	logfile, _ := ioutil.ReadFile("/opt/incentives/UptimeReport.txt")
 	logfileEncoded := base64.StdEncoding.EncodeToString(logfile)
 	csvfile, _ := ioutil.ReadFile("/opt/incentives/WorkerIncentivesReceipt.csv")
 	csvfileEncoded := base64.StdEncoding.EncodeToString(csvfile)
-	csvfile2, _ := ioutil.ReadFile("/WorkerIncentives.csv")
+	csvfile2, _ := ioutil.ReadFile("/opt/incentives/WorkerIncentives.csv")
 	csvfile2Encoded := base64.StdEncoding.EncodeToString(csvfile2)
 
 	a := mail.NewAttachment()
 	a.SetContent(logfileEncoded)
-	a.SetFilename("JobLogFile.txt")
+	a.SetFilename("UptimeReport.txt")
 	a.SetDisposition("attachment")
-	a.SetContentID("JobLogFile")
+	a.SetContentID("UptimeReport")
 	m.AddAttachment(a)
 	a2 := mail.NewAttachment()
 	a2.SetContent(csvfileEncoded)
@@ -241,9 +241,9 @@ func IncentivesEmailConf() []byte {
 	email := mail.NewEmail(name, address)
 	m.Personalizations[0].AddTos(email)
 
-	logfile, _ := ioutil.ReadFile("/UptimeReport.txt")
+	logfile, _ := ioutil.ReadFile("/opt/incentives/UptimeReport.txt")
 	logfileEncoded := base64.StdEncoding.EncodeToString(logfile)
-	csvfile, _ := ioutil.ReadFile("/WorkerIncentives.csv")
+	csvfile, _ := ioutil.ReadFile("/opt/incentives/WorkerIncentives.csv")
 	csvfileEncoded := base64.StdEncoding.EncodeToString(csvfile)
 
 	a := mail.NewAttachment()
