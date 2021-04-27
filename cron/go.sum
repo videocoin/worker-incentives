@@ -1,0 +1,10 @@
+github.com/go-cmd/cmd v1.2.1 h1:fV4o2i9JX8+TeI1xB1x7Ji/3ndEfJNdaa+7uYGVhkuM=
+github.com/go-cmd/cmd v1.2.1/go.mod h1:F2yJeMVdy5ymftSgCR0zMN7XLhKFJpG5/1brXju8EXU=
+github.com/go-test/deep v1.0.6/go.mod h1:QV8Hv/iy04NyLBxAdO9njL0iVPN1S4d/A3NVv1V36o8=
+github.com/sendgrid/rest v1.0.2 h1:xdfALkR1m9eqf41/zEnUmV0fw4b31ZzGZ4Dj5f2/w04=
+github.com/sendgrid/rest v2.6.1+incompatible h1:8DyG9t24pTGYb9D7PsyCHlLsqAm4rUbSel0GQtNpN3Y=
+github.com/sendgrid/rest v2.6.1+incompatible/go.mod h1:kXX7q3jZtJXK5c5qK83bSGMdV6tsOE70KbHoqJls4lE=
+github.com/sendgrid/sendgrid-go v1.2.0 h1:2K3teZdhaPe12ftFyFL4AWDH4QmNPc+sCi6mWFx5+oo=
+github.com/sendgrid/sendgrid-go v3.6.3+incompatible h1:N0+lZtQOkUcLYQaIJeOnBnXEFV73BSd1++ALIIYZ7gE=
+github.com/sendgrid/sendgrid-go v3.6.3+incompatible/go.mod h1:QRQt+LX/NmgVEvmdRw0VT/QgUn499+iza2FnDca9fg8=
+golang.org/dl v0.0.0-20190829154251-82a15e2f2ead/go.mod h1:IUMfjQLJQd4UTqG1Z90tenwKoCX93Gn3MAQJMOSBsDQ=
