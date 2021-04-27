@@ -6,8 +6,12 @@ require (
 	cloud.google.com/go v0.71.0 // indirect
 	github.com/TV4/logrus-stackdriver-formatter v0.1.0
 	github.com/ethereum/go-ethereum v1.9.13
+	github.com/go-cmd/cmd v1.3.0
+	github.com/golang-module/carbon v1.3.7 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/sendgrid/rest v2.6.3+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.9.0+incompatible
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1 // indirect

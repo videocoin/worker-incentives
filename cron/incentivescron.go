@@ -25,10 +25,10 @@ func main() {
 		month := t.Month()
 		now := time.Date(t.Year(), month, 25, 0, 0, 0, 0, t.Location())
 		lastmonth := now.AddDate(0, -1, 0)
-		strnow := now.String()
-		strlastmonth := lastmonth.String()
+		strnow := now.Format("2006-01-02T15:04:05.999999-07:00")
+		strlastmonth := lastmonth.Format("2006-01-02T15:04:05.999999-07:00")
 
-		workerJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/job", "incentives", "WorkerIncentives.csv", "UptimeReport.txt", strlastmonth, strnow)
+		workerJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/job", "incentives", "WorkerIncentives.csv", "UptimeReport.txt", string(strlastmonth), string(strnow))
 		jobChan := make(chan struct{})
 		go func() {
 			defer close(jobChan)
@@ -104,10 +104,10 @@ func main() {
 		month := t.Month()
 		now := time.Date(t.Year(), month, 25, 0, 0, 0, 0, t.Location())
 		lastmonth := now.AddDate(0, -1, 0)
-		strnow := now.String()
-		strlastmonth := lastmonth.String()
+		strnow := now.Format("2006-01-02T15:04:05.999999-07:00")
+		strlastmonth := lastmonth.Format("2006-01-02T15:04:05.999999-07:00")
 
-		workerJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/job", "incentives", "WorkerIncentives.csv", "UptimeReport.txt", strlastmonth, strnow)
+		workerJob := cmd.NewCmdOptions(cmdOptions, "/opt/incentives/job", "incentives", "WorkerIncentives.csv", "UptimeReport.txt", string(strlastmonth), string(strnow))
 		jobChan := make(chan struct{})
 		go func() {
 			defer close(jobChan)
@@ -178,12 +178,12 @@ func sendEmail() {
 }
 
 func IncentivesEmailConfPayout() []byte {
-	address := "workers-incentives@liveplanet.net"
+	address := "incentivesreports@liveplanet.net"
 	name := "Incentives Reports"
 	from := mail.NewEmail(name, address)
 	subject := "Incentives - Monthly Payout"
 
-	address = "workers-incentives@liveplanet.net"
+	address = "incentivesreports@liveplanet.net"
 	name = "Incentives Reports Google Groups"
 	to := mail.NewEmail(name, address)
 
@@ -195,33 +195,41 @@ func IncentivesEmailConfPayout() []byte {
 	email := mail.NewEmail(name, address)
 	m.Personalizations[0].AddTos(email)
 
-	logfile, _ := ioutil.ReadFile("/opt/incentives/WorkerIncentivesReceipt.csv")
+	logfile, _ := ioutil.ReadFile("opt/incentives/JobLogFile")
 	logfileEncoded := base64.StdEncoding.EncodeToString(logfile)
-	csvfile, _ := ioutil.ReadFile("/WorkerIncentives.csv")
+	csvfile, _ := ioutil.ReadFile("/opt/incentives/WorkerIncentivesReceipt.csv")
 	csvfileEncoded := base64.StdEncoding.EncodeToString(csvfile)
+	csvfile2, _ := ioutil.ReadFile("/WorkerIncentives.csv")
+	csvfile2Encoded := base64.StdEncoding.EncodeToString(csvfile2)
 
 	a := mail.NewAttachment()
 	a.SetContent(logfileEncoded)
-	a.SetFilename("WorkerIncentivesReceipt.csv")
+	a.SetFilename("JobLogFile.txt")
 	a.SetDisposition("attachment")
-	a.SetContentID("WorkerIncentivesReceipt")
+	a.SetContentID("JobLogFile")
 	m.AddAttachment(a)
 	a2 := mail.NewAttachment()
 	a2.SetContent(csvfileEncoded)
-	a2.SetFilename("WorkerIncentives.csv")
+	a2.SetFilename("WorkerIncentivesReceipt.csv")
 	a2.SetDisposition("attachment")
-	a2.SetContentID("WorkerIncentives")
+	a2.SetContentID("WorkerIncentivesReceipt")
 	m.AddAttachment(a2)
+	a3 := mail.NewAttachment()
+	a3.SetContent(csvfile2Encoded)
+	a3.SetFilename("WorkerIncentives.csv")
+	a3.SetDisposition("attachment")
+	a3.SetContentID("WorkerIncentives")
+	m.AddAttachment(a3)
 	return mail.GetRequestBody(m)
 }
 
 func IncentivesEmailConf() []byte {
-	address := "workers-incentives@liveplanet.net"
+	address := "incentivesreports@liveplanet.net"
 	name := "Incentives Reports"
 	from := mail.NewEmail(name, address)
 	subject := "Incentives Monthly Report"
 
-	address = "workers-incentives@liveplanet.net"
+	address = "incentivesreports@liveplanet.net"
 	name = "Incentives Reports Google Groups"
 	to := mail.NewEmail(name, address)
 
