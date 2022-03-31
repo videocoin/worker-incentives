@@ -39,7 +39,7 @@ spec:
             app: incentivesreport-videocoin-net
         spec:
           containers:
-          - image: registry.videocoin.net/workers-videocoin-net/incentives-cron:v1.0
+          - image: registry.videocoin.net/workers-videocoin-net/incentives-cron:a603cfb2ca5178e10c8119825250f95b9fee0775
             imagePullPolicy: Always
             name: incentivesreport-videocoin-net
             command:
