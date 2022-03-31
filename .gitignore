@@ -4,3 +4,4 @@ credentials.json
 token.json
 pw*.json
 key*.json
+.vscode

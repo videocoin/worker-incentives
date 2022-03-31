@@ -1,0 +1,62 @@
+---
+kind: pipeline
+type: kubernetes
+name: worker-incentives
+
+steps:
+  - name: docker-build-push
+    image: plugins/docker
+    environment:
+      BOT_USER:
+        from_secret: BOT_USER
+      BOT_PASSWORD:
+        from_secret: BOT_PASSWORD
+    settings:
+      username:
+        from_secret: registry_username
+      password:
+        from_secret: registry_password
+      dockerfile: Dockerfile
+      registry: registry.videocoin.net
+      repo: registry.videocoin.net/workers-videocoin-net/incentives-cron
+      tags: ${DRONE_COMMIT}
+      build_args_from_env:
+        - BOT_USER
+        - BOT_PASSWORD
+    resources:
+      requests:
+        cpu: 2000
+        memory: 256MiB
+      limits:
+        cpu: 4000
+        memory: 512MiB
+
+  - name: slack-notification
+    image: plugins/slack
+    when:
+      status:
+        - success
+        - failure
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: videocoin-monitoring
+      link_names: true
+      username: Drone
+      template: >
+        {{#success build.status}}
+          The build number {{build.number}} succeeded. Check details at https://drone.videocoin.net/videocoin/worker-incentives/{{build.number}}
+        {{else}}
+          The build number {{build.number}} failed. Check details at https://drone.videocoin.net/videocoin/worker-incentives/{{build.number}}
+        {{/success}}
+      requests:
+        cpu: 1
+        memory: 32MiB
+
+trigger:
+  branch:
+    - master
+    - monthly-cron
+  event:
+    - push
+    - tag

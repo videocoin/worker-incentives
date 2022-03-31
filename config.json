@@ -1,8 +1,6 @@
 {
     "KeyFile": "keyfile_dev.json",
     "Password": "test123",
-    "ClientID": "47928468404-hfuqhrb6lhtv9sem30rkjc1djcrlpt4v.apps.googleusercontent.com",
-    "CredentialsFile": "credentials.json",
-    "WorkerChainURL": "https://symphony.dev.videocoin.net/",
+    "WorkerChainURL": "http://localhost:8545",
     "LogLevel": "trace"
 }

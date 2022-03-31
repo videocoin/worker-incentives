@@ -1,0 +1,61 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app: incentivesreport-videocoin-net
+  name: incentivesreport-videocoin-net
+  namespace: workers-videocoin-net
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "0 13 25 * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            vault.hashicorp.com/agent-inject: "true"
+            vault.hashicorp.com/role: "workers-videocoin-net"
+            vault.hashicorp.com/agent-pre-populate-only: "true"
+            vault.hashicorp.com/preserve-secret-case: "true"
+            vault.hashicorp.com/agent-inject-secret-sendgrip.key: "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives"
+            vault.hashicorp.com/agent-inject-secret-prodrun.json: "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives"
+            vault.hashicorp.com/agent-inject-secret-worker-key.json: "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives"
+            vault.hashicorp.com/agent-inject-template-sendgrip.key: |
+              {{ with secret "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives" -}}
+                {{ .Data.SENDGRIP_KEY }}{{- end }}
+            vault.hashicorp.com/agent-inject-template-prodrun.json: |
+              {{ with secret "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives" -}}
+                {{ .Data.PROD_JSON }}{{- end }}
+            vault.hashicorp.com/agent-inject-template-worker-key.json: |
+              {{ with secret "prod-videocoin-net/github-repo/apps-videocoin-net/charts/videocoin-net/workers-videocoin-net/incentives" -}}
+                {{ .Data.WORKERKEY_JSON }}{{- end }}
+            vault.hashicorp.com/agent-inject-secret-envconfig: prod-videocoin-net/github-repo/apps-videocoin-net/charts/cluster-tools/mongodb/creds
+            vault.hashicorp.com/agent-inject-template-envconfig: |
+              {{ with secret "prod-videocoin-net/github-repo/apps-videocoin-net/charts/cluster-tools/mongodb/creds" -}}
+                export AJ_MONGO="{{ .Data.uri }}"
+              {{- end }}
+          labels:
+            app: incentivesreport-videocoin-net
+        spec:
+          containers:
+          - image: registry.videocoin.net/workers-videocoin-net/incentives-cron:a603cfb2ca5178e10c8119825250f95b9fee0775
+            imagePullPolicy: Always
+            name: incentivesreport-videocoin-net
+            command:
+            - /bin/sh
+            args:
+              - -c
+              - source /vault/secrets/envconfig && /opt/incentives/cron
+            env:
+            - name: Mode
+              value: "Report"
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+          imagePullSecrets:
+          - name: regcred
+          nodeSelector:
+            cloud.google.com/gke-nodepool: symphony
+          restartPolicy: OnFailure
